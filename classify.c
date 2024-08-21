@@ -53,6 +53,7 @@ int main(int argc, char **argv) {
 
   if (argc < 2)
     return usage(argv[0]);
+  setvbuf(stdout, NULL, _IOLBF, BUFSIZ);
 
   size = mapdict(&dict, argv[1]);
   if (size < 10 || memcmp(dict, "ZF24", 4))
