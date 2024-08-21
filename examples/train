@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -e -o pipefail
+cd "${0%/*}/.."
+umask 0077
+
+PATH=/lib/zf:$PATH
+READ=$(find .Read/{cur,new} -type f -mtime -800)
+JUNK=$(find .Junk/{cur,new} -type f -mtime -800)
+
+shuf <<< "$READ" | train > zf/read.main.tmp
+shuf <<< "$READ" | train -H > zf/read.head.tmp
+shuf <<< "$JUNK" | train > zf/junk.main.tmp
+shuf <<< "$JUNK" | train -H > zf/junk.head.tmp
+
+mv -f zf/read.main.tmp zf/read.main
+mv -f zf/read.head.tmp zf/read.head
+mv -f zf/junk.main.tmp zf/junk.main
+mv -f zf/junk.head.tmp zf/junk.head

@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -e -o pipefail
+trap '(( $? )) && exit 75' EXIT
+cd "${0%/*}/.."
+
+PATH=/lib/zf:$PATH
+TMP=$(deliver tmp)
+
+if (( $(classify zf/read.main $TMP) > $(classify zf/junk.main $TMP) )) &&
+   (( $(classify zf/read.head $TMP) > $(classify zf/junk.head $TMP) )); then
+  ln $TMP .Junk/new/ && rm -f $TMP
+else
+  ln $TMP new/ && rm -f $TMP
+fi
