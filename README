@@ -1,0 +1,83 @@
+zf
+==
+
+zf is a compressor-based spam filter which uses zstd compression to
+classify inbound email. Dictionaries are trained from samples of valid
+messages and junk mail respectively. Subsequent messages will compress
+best with the dictionary trained on samples they resemble most closely.
+
+This technique is straightforward and relatively inexpensive but
+nonetheless achieves state-of-the-art filtering accuracy with realistic
+training sets of a few thousand messages per category.
+
+
+Building dictionaries
+---------------------
+
+The train program expects a list of files on stdin or as arguments, each
+containing a single message. It trains a dictionary from these samples
+using the zstd fast cover algorithm then writes it to stdout.
+
+By default, train will generate a 1M dictionary from the first 16k of
+each message using fast cover parameters d = 6, k = 100 and optimised for
+compression level 12. These defaults can be adjusted using command-line
+options. It is also possible to train on just message bodies or headers
+using the -B and -H options.
+
+All relevant parameters are recorded in a short header prepended to the
+dictionary so they can be reproduced exactly during classification.
+
+The examples/train script demonstrates how to train whole-message and
+header-only dictionaries from maildir archives of read and junk mail.
+It expects to live in the zf subdirectory of a maildir hierarchy and is
+a verbatim copy of my own daily job to rebuild classifiers.
+
+
+Classifying messages
+--------------------
+
+The classify program loads the dictionary given as its first argument, then
+reports the size of each message specified as an argument or the message
+supplied on stdin when compressed with this dictionary. All parameters are
+set to the values used in training, including whole-message, header-only
+or body-only mode and truncation size.
+
+The examples/deliver script demonstrates how classify can be used in
+an MTA pipe alias to filter inbound junk mail using whole-message and
+header-only dictionaries. It expects to live in the zf subdirectory of
+a maildir hierarchy and is a verbatim copy of the script which delivers
+my own inbound email. A message is only filtered as junk if both the
+whole-message and header-only classifiers agree it is spam, making false
+positives vanishingly rare.
+
+
+Delivering to a maildir
+-----------------------
+
+The deliver helper reads a message on stdin and safely writes it to a
+unique file named according to the maildir specification, reporting the
+filename on stdout. This file must be created in the tmp subdirectory of
+a maildir, then renamed into the new subdirectory. The examples/deliver
+script demonstrates how it can be used.
+
+
+Building and installing
+-----------------------
+
+Run 'make install' at the top of the source tree to install classify,
+deliver and train in /lib/zf. Alternatively, you can set DESTDIR and/or
+LIBDIR to install in a different location, or make, strip and copy the
+binaries into place manually.
+
+The programs should be portable to any reasonably modern POSIX system
+with the zstd library available, including Linux and BSD. The example
+scripts require Bash 4.x or later.
+
+Please report any problems or bugs to Chris Webb <chris@arachsys.com>.
+
+
+Copying
+-------
+
+This software was written by Chris Webb <chris@arachsys.com> and is
+distributed as Free Software under the terms of the MIT license in COPYING.
