@@ -61,17 +61,35 @@ a maildir, then renamed into the new subdirectory. The examples/deliver
 script demonstrates how it can be used.
 
 
+Extracting and parsing message headers
+--------------------------------------
+
+The header helper extracts the unfolded content of specified headers from
+messages given as arguments or from the message supplied on stdin.
+
+Optionally, it can parse date headers and convert them to script-friendly
+unix timestamps, or extract individual addresses from headers that
+contain RFC 5322 address lists. The latter feature is especially useful
+for implementing whitelisting.
+
+This program is written in Go to avoid heavy-duty string wrangling of
+untrusted message text in C. It has no dependencies beyond the standard
+library. If a Go compiler is not available, the makefile will not attempt
+to build or install it.
+
+
 Building and installing
 -----------------------
 
 Run 'make install' at the top of the source tree to install classify,
-deliver and train in /lib/zf. Alternatively, you can set DESTDIR and/or
-LIBDIR to install in a different location, or make, strip and copy the
-binaries into place manually.
+deliver, header and train in /lib/zf. Alternatively, you can set DESTDIR
+and/or LIBDIR to install in a different location, or make, strip and copy
+the binaries into place manually.
 
 The programs should be portable to any reasonably modern POSIX system
-with the zstd library available, including Linux and BSD. The example
-scripts require Bash 4.x or later.
+with the zstd library available, including Linux and BSD. The optional
+header helper also requires a Go compiler and the example scripts are
+written for Bash 4.x or later.
 
 Please report any problems or bugs to Chris Webb <chris@arachsys.com>.
 
