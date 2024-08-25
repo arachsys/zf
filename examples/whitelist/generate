@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -e -o pipefail
+cd "${0%/*}/.."
+umask 0077
+
+PATH=/lib/zf:$PATH
+READ=$(find .Read/{cur,new} -type f -mtime -800)
+SELF='chris(\+.*)?@arachsys.com'
+
+xargs -r header -a from <<< "$READ" \
+  | grep -E -v -x "$SELF" \
+  | sort -u > zf/whitelist.tmp
+mv -f zf/whitelist.tmp zf/whitelist

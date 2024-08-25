@@ -1,0 +1,45 @@
+#!/bin/bash
+
+set -e -o pipefail
+cd "${0%/*}/.."
+umask 0077
+
+PATH=/lib/zf:$PATH
+
+unset READMAIN READHEAD JUNKMAIN JUNKHEAD
+trap 'rm -f $READMAIN $READHEAD $JUNKMAIN $JUNKHEAD' EXIT
+
+READMAIN=$(mktemp zf/read.main.XXXXXX)
+READHEAD=$(mktemp zf/read.head.XXXXXX)
+JUNKMAIN=$(mktemp zf/junk.main.XXXXXX)
+JUNKHEAD=$(mktemp zf/junk.head.XXXXXX)
+
+let READLIMIT=50000 JUNKLIMIT=50000
+READ=$(find .Read/{cur,new} -type f -mtime -800 -mtime +100)
+JUNK=$(find .Junk/{cur,new} -type f -mtime -800 -mtime +100)
+
+echo "Training dictionaries..."
+shuf -n $READLIMIT <<< "$READ" | train > $READMAIN
+shuf -n $READLIMIT <<< "$READ" | train -H > $READHEAD
+shuf -n $JUNKLIMIT <<< "$JUNK" | train > $JUNKMAIN
+shuf -n $JUNKLIMIT <<< "$JUNK" | train -H > $JUNKHEAD
+
+READ=$(find .Read/{cur,new} -type f -mtime -100)
+JUNK=$(find .Junk/{cur,new} -type f -mtime -100)
+
+for TYPE in READ JUNK; do
+  echo "Classification of ${TYPE,,} mail:"
+  paste <(xargs -r classify $READMAIN <<< "${!TYPE}") \
+        <(xargs -r classify $READHEAD <<< "${!TYPE}") \
+        <(xargs -r classify $JUNKMAIN <<< "${!TYPE}") \
+        <(xargs -r classify $JUNKHEAD <<< "${!TYPE}") \
+    | while read RM RH JM JH; do
+        if [[ $RM -le $JM ]]; then
+          echo pass on whole message
+        elif [[ $RH -le $JH ]]; then
+          echo pass on just headers
+        else
+          echo filtered
+        fi
+      done | sort -r | uniq -c
+done

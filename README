@@ -68,9 +68,11 @@ The header helper extracts the unfolded content of specified headers from
 messages given as arguments or from the message supplied on stdin.
 
 Optionally, it can parse date headers and convert them to script-friendly
-unix timestamps, or extract individual addresses from headers that
-contain RFC 5322 address lists. The latter feature is especially useful
-for implementing whitelisting.
+unix timestamps, or extract individual addresses from headers that contain
+RFC 5322 address lists. The latter feature is especially useful for
+implementing whitelisting: examples/whitelist/generate demonstrates how
+to compile a whitelist from archived mail and examples/whitelist/deliver
+shows how one can be integrated into filtering.
 
 This program is written in Go to avoid heavy-duty string wrangling of
 untrusted message text in C. It has no dependencies beyond the standard
