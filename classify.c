@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#define ZSTD_STATIC_LINKING_ONLY
 #include <zstd.h>
 #include "util.h"
 
@@ -73,7 +74,8 @@ int main(int argc, char **argv) {
   if (ZSTD_isError(ZSTD_CCtx_setParameter(context,
         ZSTD_c_compressionLevel, level)))
     errx(1, "Failed to set compression level");
-  if (ZSTD_isError(ZSTD_CCtx_loadDictionary(context, dict + 10, size - 10)))
+  if (ZSTD_isError(ZSTD_CCtx_loadDictionary_advanced(context, dict + 10,
+        size - 10, ZSTD_dlm_byRef, ZSTD_dct_fullDict)))
     errx(1, "Failed to load dictionary");
 
   if (argc == 2)
