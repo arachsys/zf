@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -e -o pipefail
+
+if [[ ! -S /dev/stdin ]] || [[ $# -ne 1 ]] || [[ -z $1 ]]; then
+  echo "Usage: daemon -s SOCKET ${0##*/} BOXDIR" >&2
+  exit 64
+elif ! read -d '' -r MAILBOX || [[ /$MAILBOX/ == */../* ]]; then
+  echo "Mailbox path is illegal" >&2
+  exit 1
+elif ! cd -- "$1/$MAILBOX" || [[ ! -d new ]] || [[ ! -d tmp ]]; then
+  echo "Mailbox is not a maildir" >&2
+  exit 1
+fi
+
+PATH=/lib/zf:$PATH
+TMP=$(deliver tmp)
+
+if [[ -f zf/whitelist ]] && header -a from $TMP \
+    | grep -F -f - -q -x zf/whitelist; then
+  ln $TMP new/ && rm -f $TMP && echo delivered
+elif [[ -d .Junk/new ]] && [[ -d .Junk/tmp ]] &&
+     [[ -f zf/read.zf ]] && [[ -f zf/junk.zf ]] &&
+     (( $(classify zf/read.zf $TMP) > $(classify zf/junk.zf $TMP) )); then
+  ln $TMP .Junk/new/ && rm -f $TMP && echo delivered
+else
+  ln $TMP new/ && rm -f $TMP && echo delivered
+fi

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [[ $# -ne 2 ]] || [[ ! -S $1 ]]; then
+  echo "Usage: ${0##*/} SOCKET MAILBOX" >&2
+  exit 64
+fi
+
+if [[ $(( printf '%s\0' "$2" && cat ) | nc -N -U "$1") != delivered ]]; then
+  exit 75
+fi
